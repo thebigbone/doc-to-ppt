@@ -1,38 +1,27 @@
 from docx2pdf import convert
-import os
-from PyPDF2 import PdfReader
 from pptx import Presentation
+from pptx.util import Inches
+from pdf2image import convert_from_path
 
 try:
     docx_file = input("Enter a docx file: ")
     convert(docx_file, "output.pdf")
     pdf_file = 'output.pdf'
-    print('converted to pdf.')
+    print('Converted to PDF.')
 except:
-    print("file not found. please enter the full path or put the file in the same dir")
-    
+    print("File not found. Please enter the full path or put the file in the same directory.")
 
-def pdf_to_ppt(pdf_path, ppt_path):
-    try:
-        pdf = PdfReader(open(pdf_path, 'rb'))
+pages = convert_from_path('output.pdf', 500)
 
-        prs = Presentation()
-        for page_num in range(len(pdf.pages)):
-            page = pdf.pages[page_num]
-            text = page.extract_text()
+prs = Presentation()
+blank_slide_layout = prs.slide_layouts[6]
 
-            slide_layout = prs.slide_layouts[1]
-            slide = prs.slides.add_slide(slide_layout)
+for count, page in enumerate(pages):
+    page.save(f'out{count}.jpg', 'JPEG')
 
-            text_box = slide.shapes.add_textbox(0, 0, prs.slide_width, prs.slide_height)
-            text_frame = text_box.text_frame
-            text_frame.text = text
-        prs.save(ppt_path)
-    except:
-        print('something went wrong!')
+    slide = prs.slides.add_slide(blank_slide_layout)
+    img_path = f'out{count}.jpg'
+    pic = slide.shapes.add_picture(img_path, Inches(0), Inches(0), Inches(5))
 
-pdf_file = 'output.pdf'
-ppt_file = 'output.pptx'
-
-pdf_to_ppt(pdf_file, ppt_file)
-print('conversion successful. file name: ' + ppt_file)
+prs.save('final.pptx')
+print('Converted to PPT.')
